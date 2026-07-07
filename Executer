@@ -1,0 +1,113 @@
+-- Serviços do Roblox
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local player = Players.LocalPlayer
+
+-- =========================================================
+-- SUAS COORDENADAS CONFIGURADAS
+-- =========================================================
+local COORDENADA_ANEL       = Vector3.new(6820, 18, 20)
+local COORDENADA_NPC        = Vector3.new(209, 17, -44)
+local COORDENADA_LAVANDERIA = Vector3.new(6808, 18, -35)
+
+-- Velocidade do deslocamento (maior = mais rápido)
+local VELOCIDADE_VOO = 250 
+-- =========================================================
+
+-- Interface do Menu (Botão Liga/Desliga)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SanDiegoFarmV3"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0, 180, 0, 50)
+btn.Position = UDim2.new(0.05, 0, 0.4, 0)
+btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.TextSize = 14
+btn.Font = Enum.Font.SourceSansBold
+btn.Text = "SUPER FARM: DESLIGADO"
+btn.Parent = screenGui
+
+local ativo = false
+
+-- Função para mover o boneco suavemente pelo mapa (Evita Anti-Cheat)
+local function moverAtePosicao(destino)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+    
+    local distancia = (root.Position - destino).Magnitude
+    local tempoVoo = distancia / VELOCIDADE_VOO
+    
+    local tweenInfo = TweenInfo.new(tempoVoo, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = CFrame.new(destino)})
+    
+    tween:Play()
+    tween.Completed:Wait() -- Espera o boneco chegar fisicamente lá
+    task.wait(0.3) -- Pausa para estabilizar o mapa
+end
+
+-- Função para apertar a tecla E por cliques repetidos (Passos 1 e 2)
+local function simularCliquesE(quantidade)
+    for i = 1, quantidade do
+        if not ativo then break end
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(0.08)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        task.wait(0.35) -- Intervalo entre os cliques
+    end
+end
+
+-- Função para segurar a tecla E pressionada (Passo 3 - Lavanderia)
+local function segurarTeclaE(tempoSegurando)
+    if not ativo then return end
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    task.wait(tempoSegurando) -- Fica segurando a tecla pelo tempo configurado
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    task.wait(0.2)
+end
+
+-- Loop de execução da rota completa
+local function executarRotaCompleta()
+    while ativo do
+        -- -------------------------------------------------------------
+        -- PASSO 1: Ir até o Anel e Comprar 5 vezes
+        -- -------------------------------------------------------------
+        moverAtePosicao(COORDENADA_ANEL)
+        if not ativo then break end
+        simularCliquesE(5) -- Compra as 5 vezes solicitadas
+        task.wait(0.5)
+        
+        -- -------------------------------------------------------------
+        -- PASSO 2: Ir até o NPC pegar a maleta (vários cliques automáticos)
+        -- -------------------------------------------------------------
+        moverAtePosicao(COORDENADA_NPC)
+        if not ativo then break end
+        simularCliquesE(8) -- Clica várias vezes para garantir que coletou a maleta
+        task.wait(0.5)
+        
+        -- -------------------------------------------------------------
+        -- PASSO 3: Ir até a Lavanderia e Segurar a tecla E
+        -- -------------------------------------------------------------
+        moverAtePosicao(COORDENADA_LAVANDERIA)
+        if not ativo then break end
+        segurarTeclaE(4.0) -- Segura o E por 4 segundos para lavar/processar
+        
+        task.wait(1.5) -- Pausa de segurança rápida antes de reiniciar todo o ciclo
+    end
+end
+
+-- Alternador do Botão
+btn.MouseButton1Click:Connect(function()
+    ativo = not ativo
+    if ativo then
+        btn.Text = "SUPER FARM: LIGADO"
+        btn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        task.spawn(executarRotaCompleta)
+    else
+        btn.Text = "SUPER FARM: DESLIGADO"
+        btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
