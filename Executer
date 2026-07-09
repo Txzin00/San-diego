@@ -1,10 +1,10 @@
 -- ==========================================
--- SAN DIEGO HUB - ORIGINAL & COMPLETO
+-- SAN DIEGO HUB - ORIGINAL & COMPLETO (FIXED)
 -- ==========================================
 
-local Players = game:Service("Players")
-local TweenService = game:Service("TweenService")
-local UserInputService = game:Service("UserInputService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 local playerGui = LocalPlayer:WaitForChild("PlayerGui", 15)
@@ -140,7 +140,7 @@ end)
 local function simularTeclaE(vezes)
     local VirtualInputManager = game:GetService("VirtualInputManager")
     for i = 1, vezes do
-        if not autoFarmActive then breakend
+        if not autoFarmActive then break end
         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
         task.wait(0.25)
         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
